@@ -28,7 +28,10 @@ from .verify import _authenticate, _surface_unenforced
 from .verify import clauses as _clauses_verify
 
 _UNSET = object()
-Keys = Union[bytes, "list[bytes]", "tuple[bytes, ...]"]
+# One key or several; each the canonical hex string (default) or 64 raw bytes
+# (the Key format, §6.2).
+Key = Union[str, bytes]
+Keys = Union[Key, "list[Key]", "tuple[Key, ...]"]
 
 
 class Obsigil:
@@ -73,7 +76,7 @@ class Obsigil:
         cls,
         *,
         clauses: dict,
-        mandate_key: bytes,
+        mandate_key: Union[str, bytes],
         exp: int,
         tid=None,
         aud: Optional[list] = None,

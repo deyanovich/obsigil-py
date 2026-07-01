@@ -22,7 +22,7 @@ from ._constants import (
 )
 from .aead import seal
 from .encoding import encode_b64url, encode_hex
-from .keys import _assert_mandate_key
+from .keys import _coerce_mandate_key
 from .serial import _ensure_pure, serialize
 from .uuid7 import generate_uuid7, is_uuid7, is_uuid7_bytes, uuid_to_bytes
 
@@ -95,7 +95,7 @@ def _seal_half(wire: dict, key: bytes, alg: str, encoding: str) -> str:
 def mint(
     *,
     clauses: dict,
-    mandate_key: bytes,
+    mandate_key: Union[str, bytes],
     exp: int,
     tid: Optional[Tid] = None,
     aud: Optional[list] = None,
@@ -107,21 +107,24 @@ def mint(
 ) -> str:
     """Mint a token (Token structure §4, Construction §5).
 
-    ``clauses`` is application data (keys are non-negative integers or text
-    strings; reserved fields are set via the dedicated keyword arguments).
-    ``tid`` defaults to a fresh generated UUIDv7; a supplied one is validated.
-    Defaults are AES-SIV (``alg="0"``) and base64 (``encoding``). ``manifest``,
-    if given, is a dict with a required ``iss`` and optional ``claims`` /
-    ``exp`` / ``alg``; it is sealed keyless under the public manifest key.
+    ``mandate_key`` is the canonical hex key string by default (128 lowercase
+    hex digits, the Key format §6.2) — the form read from a secret environment
+    variable — or the 64 raw bytes. ``clauses`` is application data (keys are
+    non-negative integers or text strings; reserved fields are set via the
+    dedicated keyword arguments). ``tid`` defaults to a fresh generated UUIDv7;
+    a supplied one is validated. Defaults are AES-SIV (``alg="0"``) and base64
+    (``encoding``). ``manifest``, if given, is a dict with a required ``iss``
+    and optional ``claims`` / ``exp`` / ``alg``; it is sealed keyless under the
+    public manifest key.
 
     >>> import obsigil
-    >>> key = bytes(range(1, 65))
+    >>> key = bytes(range(1, 65)).hex()  # 128-char hex key
     >>> token = obsigil.mint(clauses={"role": "admin"}, mandate_key=key,
     ...                      exp=4_000_000_000, aud=["api"])
     >>> obsigil.clauses(token, keys=key, audience="api", now=1)["role"]
     'admin'
     """
-    _assert_mandate_key(mandate_key)
+    mandate_key = _coerce_mandate_key(mandate_key)
     if alg not in _ALGS:
         raise ValueError(f"obsigil: unsupported algorithm code {alg!r}")
     if encoding not in _ENCODINGS:

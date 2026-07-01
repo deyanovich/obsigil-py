@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "obsigil"
-version = "0.1.0"
+version = "0.2.0"
 description = "Pure-Python implementation of the obsigil mandate-token format (AES-SIV / AES-GCM-SIV)"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -40,6 +40,7 @@ test = ["pytest>=7"]
 packages = ["src/obsigil"]
 
 [tool.hatch.build.targets.sdist]
-# Ship only the package, tests, README, and licenses — not dev cruft
-# (.claude/, .iloc-cache.json, caches). pyproject.toml is always included.
-only-include = ["src", "tests", "README.md", "LICENSE-MIT", "LICENSE-APACHE"]
+# Ship only the package, tests, README, changelog, and licenses — not
+# dev cruft (.claude/, .iloc-cache.json, caches). pyproject.toml is
+# always included.
+only-include = ["src", "tests", "README.md", "CHANGELOG.md", "LICENSE-MIT", "LICENSE-APACHE"]

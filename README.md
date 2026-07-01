@@ -29,11 +29,11 @@ you can read the whole format end to end.
 import obsigil
 from obsigil import Obsigil
 
-key = obsigil.generate_key()                      # 64 CSPRNG bytes
+key = obsigil.generate_key()                      # 128-char hex, store as a secret
 
 token = Obsigil.mint(
     clauses={"role": "admin"},                    # opaque application data
-    mandate_key=key,
+    mandate_key=key,                              # hex by default (or 64 raw bytes)
     exp=4_000_000_000,
     aud=["api"],
     sub="u42",
@@ -99,7 +99,8 @@ API conformance, §12.2):
 The free functions **`mint`**, **`clauses`**, **`claims`**,
 **`mandate`**, **`manifest`**, **`clauses_unchecked`**,
 **`mandate_plaintext`**, **`manifest_plaintext`**, and
-**`authorization_header`** wrap the same core, plus **`generate_key`**,
+**`authorization_header`** wrap the same core, plus **`generate_key`**
+(128-char hex) / **`generate_key_bytes`** (64 raw bytes),
 **`generate_uuid7`**, **`is_uuid7`**, **`is_uuid7_bytes`**,
 **`uuid7_time`**, **`MANIFEST_KEY`**, **`ObsigilError`**, **`Reason`**.
 The granular `Reason` is delivered to `on_reject` for **internal logging

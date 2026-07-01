@@ -26,12 +26,15 @@ from ._constants import (
 from .aead import open_
 from .encoding import decode_b64url, decode_hex
 from .errors import ObsigilError, Reason
-from .keys import _assert_mandate_key
+from .keys import _coerce_mandate_key
 from .serial import deserialize
 from .token import MalformedToken, parse
 from .uuid7 import is_uuid7_bytes, uuid_from_bytes
 
-Keys = Union[bytes, "list[bytes]", "tuple[bytes, ...]"]
+# One key or several. Each key is the canonical hex string (default) or 64 raw
+# bytes (the Key format, §6.2).
+Key = Union[str, bytes]
+Keys = Union[Key, "list[Key]", "tuple[Key, ...]"]
 
 
 def clauses(
@@ -47,8 +50,9 @@ def clauses(
     """Verify a token's mandate and return its clauses (Audiences §9, Security Considerations §16, Conformance and test vectors §13).
 
     Accepts a full token or the forwarded ``.0mandate`` form; the manifest is
-    never parsed or trusted. ``keys`` is one mandate key or several, tried in
-    order (key selection by trial decryption, §16.5). ``leeway`` is clamped to a fixed maximum
+    never parsed or trusted. ``keys`` is one mandate key or several, each a
+    canonical hex string (default) or 64 raw bytes (the Key format, §6.2),
+    tried in order (key selection by trial decryption, §16.5). ``leeway`` is clamped to a fixed maximum
     (Limits and robustness, §16.10). On any failure raises a single :class:`ObsigilError`; the granular
     :class:`Reason` is delivered to ``on_reject`` for internal logging only.
 
@@ -81,8 +85,11 @@ def _authenticate(token, key_or_keys, max_decoded_len) -> Tuple[bool, object]:
     key_list = list(key_or_keys) if isinstance(key_or_keys, (list, tuple)) else [key_or_keys]
     if not key_list:
         raise ValueError("obsigil: at least one mandate key is required")
-    for key in key_list:
-        _assert_mandate_key(key)
+    # Coerce each candidate to its 64 bytes, accepting a hex string (default)
+    # or raw bytes (the Key format, §6.2). A single hex string is one key, not
+    # a sequence of one-character keys — the isinstance check above keeps str
+    # and bytes out of the list/tuple branch.
+    key_list = [_coerce_mandate_key(key) for key in key_list]
     if not isinstance(token, str):
         return False, Reason.MALFORMED  # a non-string token (e.g. None) rejects uniformly
     # Limits and robustness (§16.10): bound the whole token before parsing so an oversize input cannot

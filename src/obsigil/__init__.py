@@ -14,7 +14,7 @@ canonical encoder is obsigil's own).
 
     import obsigil
 
-    key = obsigil.generate_key()
+    key = obsigil.generate_key()                                # 128-char hex
     tok = obsigil.Obsigil.mint(
         clauses={"role": "admin"},
         mandate_key=key,
@@ -35,13 +35,13 @@ from __future__ import annotations
 from ._constants import MANIFEST_KEY
 from .core import Obsigil, clauses_unchecked, mandate_plaintext
 from .errors import ObsigilError, Reason
-from .keys import generate_key
+from .keys import generate_key, generate_key_bytes
 from .manifest import authorization_header, claims, mandate, manifest, manifest_plaintext
 from .mint import mint
 from .uuid7 import generate_uuid7, is_uuid7, is_uuid7_bytes, uuid7_time
 from .verify import clauses
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "MANIFEST_KEY",
@@ -53,6 +53,7 @@ __all__ = [
     "clauses",
     "clauses_unchecked",
     "generate_key",
+    "generate_key_bytes",
     "generate_uuid7",
     "is_uuid7",
     "is_uuid7_bytes",
